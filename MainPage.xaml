@@ -1,0 +1,80 @@
+﻿<Page
+    x:Class="zecil.AmbiHueTv.MainPage"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    mc:Ignorable="d"
+    Loaded="Page_Loaded">
+
+    <Grid Background="{ThemeResource ApplicationPageBackgroundThemeBrush}">
+        <Grid.ChildrenTransitions>
+            <TransitionCollection>
+                <EntranceThemeTransition/>
+            </TransitionCollection>
+        </Grid.ChildrenTransitions>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+
+        <TextBlock Grid.Row="0" x:Name="pageTitle" Text="AmbiHueTv" Style="{StaticResource HeaderTextBlockStyle}" 
+                        IsHitTestVisible="false" TextWrapping="NoWrap" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+
+        <StackPanel Grid.Row="1" x:Name="ContentRoot" HorizontalAlignment="Center" VerticalAlignment="Center" Orientation="Horizontal" Margin="12,0,0,0">
+            <Button x:Name="video_init" Content="Start" Click="init_Click" HorizontalAlignment="Left" Margin="0,0,30,20" Width="180"/>
+            <Button x:Name="register" Content="Register" Click="register_Click" Margin="0,0,30,20" Width="120"/>
+            <Button x:Name="cleanup" Content="Stop" Click="cleanup_Click" Margin="0,0,30,20" Width="120"/>
+        </StackPanel>
+
+        <StackPanel Grid.Row="2" HorizontalAlignment="Center" VerticalAlignment="Center" Orientation="Horizontal" Margin="0,0,0,10">
+                <TextBlock Text="Algorithm:"  Height="25" HorizontalAlignment="Center" VerticalAlignment="Center" Margin="0,0,0,0" Visibility="Visible"/>
+                <ComboBox x:Name="algorithm" SelectionChanged="algorithm_SelectionChanged">
+                    <ComboBoxItem>
+                        <TextBlock Text="PureAverage"/>
+                    </ComboBoxItem>
+                    <ComboBoxItem>
+                        <TextBlock Text="MostFrequentColor"/>
+                    </ComboBoxItem>
+                    <ComboBoxItem>
+                        <TextBlock Text="MostFrequentWholeColor"/>
+                    </ComboBoxItem>
+                </ComboBox>
+            <TextBlock Text="Bias:"  Height="25" HorizontalAlignment="Center" VerticalAlignment="Center" Margin="60,0,0,0" Visibility="Visible"/>
+            <ComboBox x:Name="Bias" SelectionChanged="Bias_SelectionChanged">
+                <ComboBoxItem>
+                    <TextBlock Text="None"/>
+                </ComboBoxItem>
+                <ComboBoxItem>
+                    <TextBlock Text="RuleOfThirds"/>
+                </ComboBoxItem>
+                <ComboBoxItem>
+                    <TextBlock Text="GoldenRatio"/>
+                </ComboBoxItem>
+            </ComboBox>
+        </StackPanel>
+
+        <TextBlock x:Name="fps" Grid.Row="3" Text="FPS" HorizontalAlignment="Center" VerticalAlignment="Top" Margin="19,10,0,10"/>
+
+        <StackPanel Grid.Row="4" HorizontalAlignment="Center" VerticalAlignment="Center" Orientation="Horizontal" Margin="0,0,0,0">
+            <StackPanel>
+                <Canvas Name="PreviewCanvas" Width="200" Height="200" Background="Gray"  Margin="0,0,0,0" Visibility="Visible">
+                    <CaptureElement x:Name="previewElement" Width="200" Height="200" HorizontalAlignment="Left" Visibility="Visible"/>
+                </Canvas>
+            </StackPanel>
+            <Ellipse x:Name="frequent" Fill="AliceBlue" Width="200" Height="200" Margin="30,0,0,0" />
+        </StackPanel>
+
+        <StackPanel Grid.Row="5" HorizontalAlignment="Center" VerticalAlignment="Center" Orientation="Horizontal" Margin="0,20,0,10">
+            <TextBox HorizontalAlignment="Center" VerticalAlignment="Top" Margin="0,0,0,10"
+				x:Name="status" TextWrapping="Wrap" IsReadOnly="True" Height="120" Width="450" Text=""
+				ScrollViewer.HorizontalScrollBarVisibility="Disabled" ScrollViewer.VerticalScrollBarVisibility="Auto"/>
+        </StackPanel>
+
+    </Grid>
+</Page>
