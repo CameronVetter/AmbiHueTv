@@ -19,60 +19,64 @@
             <RowDefinition Height="Auto"/>
             <RowDefinition Height="Auto"/>
             <RowDefinition Height="Auto"/>
-            <RowDefinition Height="Auto"/>
-            <RowDefinition Height="Auto"/>
         </Grid.RowDefinitions>
 
-        <TextBlock Grid.Row="0" x:Name="pageTitle" Text="AmbiHueTv" Style="{StaticResource HeaderTextBlockStyle}" 
-                        IsHitTestVisible="false" TextWrapping="NoWrap" HorizontalAlignment="Center" VerticalAlignment="Center"/>
-
-        <StackPanel Grid.Row="1" x:Name="ContentRoot" HorizontalAlignment="Center" VerticalAlignment="Center" Orientation="Horizontal" Margin="12,0,0,0">
-            <Button x:Name="video_init" Content="Start" Click="init_Click" HorizontalAlignment="Left" Margin="0,0,30,20" Width="180"/>
-            <Button x:Name="register" Content="Register" Click="register_Click" Margin="0,0,30,20" Width="120"/>
-            <Button x:Name="cleanup" Content="Stop" Click="cleanup_Click" Margin="0,0,30,20" Width="120"/>
-        </StackPanel>
-
-        <StackPanel Grid.Row="2" HorizontalAlignment="Center" VerticalAlignment="Center" Orientation="Horizontal" Margin="0,0,0,10">
-                <TextBlock Text="Algorithm:"  Height="25" HorizontalAlignment="Center" VerticalAlignment="Center" Margin="0,0,0,0" Visibility="Visible"/>
-                <ComboBox x:Name="algorithm" SelectionChanged="algorithm_SelectionChanged">
-                    <ComboBoxItem>
-                        <TextBlock Text="PureAverage"/>
-                    </ComboBoxItem>
-                    <ComboBoxItem>
-                        <TextBlock Text="MostFrequentColor"/>
-                    </ComboBoxItem>
-                    <ComboBoxItem>
-                        <TextBlock Text="MostFrequentWholeColor"/>
-                    </ComboBoxItem>
-                </ComboBox>
-            <TextBlock Text="Bias:"  Height="25" HorizontalAlignment="Center" VerticalAlignment="Center" Margin="60,0,0,0" Visibility="Visible"/>
-            <ComboBox x:Name="Bias" SelectionChanged="Bias_SelectionChanged">
-                <ComboBoxItem>
-                    <TextBlock Text="None"/>
-                </ComboBoxItem>
-                <ComboBoxItem>
-                    <TextBlock Text="RuleOfThirds"/>
-                </ComboBoxItem>
-                <ComboBoxItem>
-                    <TextBlock Text="GoldenRatio"/>
-                </ComboBoxItem>
-            </ComboBox>
-        </StackPanel>
-
-        <TextBlock x:Name="fps" Grid.Row="3" Text="FPS" HorizontalAlignment="Center" VerticalAlignment="Top" Margin="19,10,0,10"/>
-
-        <StackPanel Grid.Row="4" HorizontalAlignment="Center" VerticalAlignment="Center" Orientation="Horizontal" Margin="0,0,0,0">
-            <StackPanel>
-                <Canvas Name="PreviewCanvas" Width="200" Height="200" Background="Gray"  Margin="0,0,0,0" Visibility="Visible">
-                    <CaptureElement x:Name="previewElement" Width="200" Height="200" HorizontalAlignment="Left" Visibility="Visible"/>
-                </Canvas>
+        <StackPanel Grid.Row="1" Orientation="Horizontal" HorizontalAlignment="Center" Margin="0,20,0,0">
+            <StackPanel  x:Name="ContentRoot"  VerticalAlignment="Center" Orientation="Vertical" Margin="0,0,50,0">
+                <Button x:Name="video_init" Content="Start" Click="init_Click" HorizontalAlignment="Left" Margin="0,0,0,10" Width="150"/>
+                <Button x:Name="register" Content="Register" Click="register_Click" Margin="0,0,0,10" Width="150"/>
+                <Button x:Name="stop" Content="Stop" Click="stop_Click" Width="150"/>
             </StackPanel>
-            <Ellipse x:Name="frequent" Fill="AliceBlue" Width="200" Height="200" Margin="30,0,0,0" />
-        </StackPanel>
 
-        <StackPanel Grid.Row="5" HorizontalAlignment="Center" VerticalAlignment="Center" Orientation="Horizontal" Margin="0,20,0,10">
-            <TextBox HorizontalAlignment="Center" VerticalAlignment="Top" Margin="0,0,0,10"
-				x:Name="status" TextWrapping="Wrap" IsReadOnly="True" Height="120" Width="450" Text=""
+            <StackPanel HorizontalAlignment="Center">
+                <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,0,0,10">
+                    <TextBlock Text="Algorithm:"  Height="25" />
+                    <ComboBox x:Name="algorithm" SelectionChanged="algorithm_SelectionChanged" Width="150">
+                        <ComboBoxItem>
+                            <TextBlock Text="PureAverage"/>
+                        </ComboBoxItem>
+                        <ComboBoxItem>
+                            <TextBlock Text="MostFrequentColor"/>
+                        </ComboBoxItem>
+                        <ComboBoxItem>
+                            <TextBlock Text="MostFrequentWholeColor"/>
+                        </ComboBoxItem>
+                    </ComboBox>
+                </StackPanel>
+                <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,0,0,10">
+                    <TextBlock Text="Bias:"  Height="25" />
+                    <ComboBox x:Name="Bias" SelectionChanged="Bias_SelectionChanged"  Width="150">
+                        <ComboBoxItem>
+                            <TextBlock Text="None"/>
+                        </ComboBoxItem>
+                        <ComboBoxItem>
+                            <TextBlock Text="RuleOfThirds"/>
+                        </ComboBoxItem>
+                        <ComboBoxItem>
+                            <TextBlock Text="GoldenRatio"/>
+                        </ComboBoxItem>
+                    </ComboBox>
+                </StackPanel>
+                <Button x:Name="calibrate" Content="Calibrate to TV" Click="calibrate_Click" HorizontalAlignment="right" Width="150"/>
+            </StackPanel>
+        </StackPanel>
+        <TextBlock x:Name="fps" Grid.Row="2" Text="FPS" HorizontalAlignment="Center" VerticalAlignment="Top" Margin="0,10,0,10"/>
+
+        <RelativePanel Grid.Row="3"  HorizontalAlignment="Center" VerticalAlignment="Center" >
+            <StackPanel Orientation="Horizontal">
+                <StackPanel>
+                    <Canvas Name="PreviewCanvas" Width="320" Height="180" Background="Gray">
+                        <CaptureElement x:Name="previewElement" Width="320" Height="180" HorizontalAlignment="Left" Tapped="previewElement_Tapped" IsTapEnabled="True"/>
+                    </Canvas>
+                </StackPanel>
+                <Ellipse x:Name="frequent" Fill="AliceBlue" Width="180" Height="180" Margin="30,0,0,0" />
+            </StackPanel>
+            <Rectangle x:Name="calibration" Fill="CadetBlue" Opacity=".3" HorizontalAlignment="Left" Height="180" Margin ="0" Stroke="CadetBlue" VerticalAlignment="Top" Width="320" IsHitTestVisible="False"/>
+        </RelativePanel>
+
+        <StackPanel Grid.Row="4" HorizontalAlignment="Center" VerticalAlignment="Center" Orientation="Horizontal" Margin="0,10,0,0">
+            <TextBox HorizontalAlignment="Center" VerticalAlignment="Top"
+				x:Name="status" TextWrapping="Wrap" IsReadOnly="True" Height="120" Width="530"
 				ScrollViewer.HorizontalScrollBarVisibility="Disabled" ScrollViewer.VerticalScrollBarVisibility="Auto"/>
         </StackPanel>
 

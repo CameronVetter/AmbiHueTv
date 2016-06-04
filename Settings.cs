@@ -21,6 +21,19 @@ namespace zecil.AmbiHueTv
         private const string BiasAlgorithmKey = "BiasAlgorithm_key";
         private static readonly BiasAlgorithm BiasAlgorithmDefault = BiasAlgorithm.RuleOfThirds;
 
+        private const string CalibrationLeftKey = "left_key";
+        private static readonly double CalibrationLeftDefault = 0;
+
+        private const string CalibreationTopKey = "top_key";
+        private static readonly double CalibreationTopDefault = 0;
+
+        private const string CalibrationWidthKey = "width_key";
+        private static readonly double CalibrationWidthDefault = 320;
+
+        private const string CalibrationHeightKey = "height_key";
+        private static readonly double CalibrationHeightDefault = 180;
+
+
         #endregion
 
         public static string DefaultBridgeIp
@@ -46,6 +59,30 @@ namespace zecil.AmbiHueTv
         {
             get { return AppSettings.GetValueOrDefault(BiasAlgorithmKey, BiasAlgorithmDefault); }
             set { AppSettings.AddOrUpdateValue(BiasAlgorithmKey, (int)value); }
+        }
+
+        public static double CalibrationLeft
+        {
+            get { return AppSettings.GetValueOrDefault(CalibrationLeftKey, CalibrationLeftDefault); }
+            set { AppSettings.AddOrUpdateValue(CalibrationLeftKey, value); }
+        }
+
+        public static double CalibreationTop
+        {
+            get { return AppSettings.GetValueOrDefault(CalibreationTopKey, CalibreationTopDefault); }
+            set { AppSettings.AddOrUpdateValue(CalibreationTopKey, value); }
+        }
+
+        public static double CalibrationWidth
+        {
+            get { return AppSettings.GetValueOrDefault(CalibrationWidthKey, CalibrationWidthDefault); }
+            set { AppSettings.AddOrUpdateValue(CalibrationWidthKey, value); }
+        }
+
+        public static double CalibrationHeight
+        {
+            get { return AppSettings.GetValueOrDefault(CalibrationHeightKey, CalibrationHeightDefault); }
+            set { AppSettings.AddOrUpdateValue(CalibrationHeightKey, value); }
         }
 
     }

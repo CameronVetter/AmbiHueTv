@@ -30,7 +30,7 @@ namespace zecil.AmbiHueTv
         public byte Blue { get; set; }
         public byte Alpha { get; set; }
 
-        public void AnalyzeFrame(ref VideoFrame frame, AnalysisAlgorithm algorithm, BiasAlgorithm bias)
+        public void AnalyzeFrame(ref VideoFrame frame, AnalysisAlgorithm algorithm, BiasAlgorithm bias, int calTop, int calLeft, int calHeight, int calWidth)
         {
             Bias = bias;
 
@@ -41,15 +41,15 @@ namespace zecil.AmbiHueTv
             switch (algorithm)
             {
                 case AnalysisAlgorithm.MostFrequentColor:
-                    MostFrequentColor(ref bitmap);
+                    MostFrequentColor(ref bitmap, calTop, calLeft, calHeight, calWidth);
                     break;
 
                 case AnalysisAlgorithm.PureAverage:
-                    PureAverage(ref bitmap);
+                    PureAverage(ref bitmap, calTop, calLeft, calHeight, calWidth);
                     break;
 
                 case AnalysisAlgorithm.MostFrequentWholeColor:
-                    MostFrequentWholeColor(ref bitmap);
+                    MostFrequentWholeColor(ref bitmap, calTop, calLeft, calHeight, calWidth);
                     break;
             }
         }
@@ -85,7 +85,7 @@ namespace zecil.AmbiHueTv
             }
         }
 
-        private void PureAverage(ref WriteableBitmap bitmap)
+        private void PureAverage(ref WriteableBitmap bitmap, int calTop, int calLeft, int calBottom, int calRight)
         {
             long redTotal = 0;
             long greenTotal = 0;
@@ -110,24 +110,27 @@ namespace zecil.AmbiHueTv
                         var blue = stream.ReadByte();
                         var alpha = stream.ReadByte();
 
-                        //discard pure black
-                        if (!(red == 0 && green == 0 && blue == 0))
+                        if (IsInCalibrationFrame(x, y, calTop, calLeft, calBottom, calRight))
                         {
-                            if (!IsGray(red, green, blue))
+                            //discard pure black
+                            if (!(red == 0 && green == 0 && blue == 0))
                             {
-                                var bias = BiasValue(x, y, width, height);
-                                redTotal += (red * bias);
-                                greenTotal += (green * bias);
-                                blueTotal += (blue * bias);
-                                alphaTotal += (alpha * bias);
-                                count += bias;
+                                if (!IsGray(red, green, blue))
+                                {
+                                    var bias = BiasValue(x, y, width, height);
+                                    redTotal += (red*bias);
+                                    greenTotal += (green*bias);
+                                    blueTotal += (blue*bias);
+                                    alphaTotal += (alpha*bias);
+                                    count += bias;
+                                }
                             }
                         }
                     }
 
-                    // track our location
+                    // track our location this sets it to the pixel about to be read
                     x++;
-                    if (x > bitmap.PixelWidth)
+                    if (x > width)
                     {
                         x = 0;
                         y++;
@@ -141,7 +144,7 @@ namespace zecil.AmbiHueTv
             Alpha = Convert.ToByte(alphaTotal / count);
         }
 
-        private void MostFrequentColor(ref WriteableBitmap bitmap)
+        private void MostFrequentColor(ref WriteableBitmap bitmap, int calTop, int calLeft, int calBottom, int calRight)
         {
             int[] redCount = new int[MaxValue];
             int[] greenCount = new int[MaxValue];
@@ -165,23 +168,26 @@ namespace zecil.AmbiHueTv
                         var blue = stream.ReadByte();
                         var alpha = stream.ReadByte();
 
-                        //discard pure black
-                        if (!(red == 0 && green == 0 && blue == 0))
+                        if (IsInCalibrationFrame(x, y, calTop, calLeft, calBottom, calRight))
                         {
-                            if (!IsGray(red, green, blue))
+                            //discard pure black
+                            if (!(red == 0 && green == 0 && blue == 0))
                             {
-                                var bias = BiasValue(x, y, width, height);
-                                redCount[red] += bias;
-                                greenCount[green] += bias;
-                                blueCount[blue] += bias;
-                                alphaCount[alpha] += bias;
+                                if (!IsGray(red, green, blue))
+                                {
+                                    var bias = BiasValue(x, y, width, height);
+                                    redCount[red] += bias;
+                                    greenCount[green] += bias;
+                                    blueCount[blue] += bias;
+                                    alphaCount[alpha] += bias;
+                                }
                             }
                         }
                     }
 
-                    // track our location
+                    // track our location this sets it to the pixel about to be read
                     x++;
-                    if (x > bitmap.PixelWidth)
+                    if (x > width)
                     {
                         x = 0;
                         y++;
@@ -195,7 +201,7 @@ namespace zecil.AmbiHueTv
             Alpha = Convert.ToByte(MostFrequentValue(alphaCount));
         }
 
-        private void MostFrequentWholeColor(ref WriteableBitmap bitmap)
+        private void MostFrequentWholeColor(ref WriteableBitmap bitmap, int calTop, int calLeft, int calBottom, int calRight)
         {
             Dictionary<ulong, int> counts = new Dictionary<ulong, int>();
             int x = 0;
@@ -216,28 +222,31 @@ namespace zecil.AmbiHueTv
                         var blue = stream.ReadByte();
                         var alpha = stream.ReadByte();
 
-                        ulong key = ((ulong)alpha << 24) + ((ulong)blue << 16) + ((ulong)green << 8) + (ulong)red;
-
-                        if (key != 0)
+                        if (IsInCalibrationFrame(x, y, calTop, calLeft, calBottom, calRight))
                         {
-                            if (!IsGray(red, green, blue))
+                            ulong key = ((ulong) alpha << 24) + ((ulong) blue << 16) + ((ulong) green << 8) + (ulong) red;
+
+                            if (key != 0)
                             {
-                                var bias = BiasValue(x, y, width, height);
-                                if (counts.ContainsKey(key))
+                                if (!IsGray(red, green, blue))
                                 {
-                                    counts[key] += bias;
-                                }
-                                else
-                                {
-                                    counts.Add(key, bias);
+                                    var bias = BiasValue(x, y, width, height);
+                                    if (counts.ContainsKey(key))
+                                    {
+                                        counts[key] += bias;
+                                    }
+                                    else
+                                    {
+                                        counts.Add(key, bias);
+                                    }
                                 }
                             }
                         }
                     }
 
-                    // track our location
+                    // track our location this sets it to the pixel about to be read
                     x++;
-                    if (x > bitmap.PixelWidth)
+                    if (x > width)
                     {
                         x = 0;
                         y++;
@@ -294,6 +303,15 @@ namespace zecil.AmbiHueTv
                 }
 
             return true;
+        }
+
+        private bool IsInCalibrationFrame(int x, int y, int calTop, int calLeft, int calBottom, int calRight)
+        {
+            if (x >= calLeft && x <= calRight && y >= calTop && y <= calBottom)
+            {
+                return true;
+            }
+            return false;
         }
 
         private int MostFrequentValue(int[] values)

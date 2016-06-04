@@ -7,11 +7,18 @@ using Windows.UI;
 using Windows.UI.Core;
 using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
+using Windows.UI.Xaml.Input;
 using Windows.UI.Xaml.Media;
 using Nito.AsyncEx;
 
 namespace zecil.AmbiHueTv
 {
+    public enum CalibrationState
+    {
+        NotCalibrating = 1,
+        CalibrationFirstPoint = 2,
+        CalibrationSecondPoint = 3
+    }
 
     // ReSharper disable once RedundantExtendsListEntry
     public sealed partial class MainPage : Page
@@ -19,6 +26,7 @@ namespace zecil.AmbiHueTv
         private Hue _hue;
         private MediaCapture _mediaCapture;
         private bool _isSyncing;
+        private CalibrationState _calState = CalibrationState.NotCalibrating;
 
         public INotifyTaskCompletion Initialization { get; private set; }
 
@@ -45,7 +53,8 @@ namespace zecil.AmbiHueTv
 
             video_init.IsEnabled = true;
             register.IsEnabled = false;
-            cleanup.IsEnabled = false;
+            stop.IsEnabled = false;
+            calibrate.IsEnabled = false;
         }
 
         private void SetDisabledButtonVisibility()
@@ -53,7 +62,8 @@ namespace zecil.AmbiHueTv
 
             video_init.IsEnabled = false;
             register.IsEnabled = false;
-            cleanup.IsEnabled = false;
+            stop.IsEnabled = false;
+            calibrate.IsEnabled = false;
         }
 
         private void SetRegisterButtonVisibility()
@@ -61,7 +71,8 @@ namespace zecil.AmbiHueTv
 
             video_init.IsEnabled = false;
             register.IsEnabled = true;
-            cleanup.IsEnabled = false;
+            stop.IsEnabled = false;
+            calibrate.IsEnabled = false;
         }
 
         private void SetRunningButtonVisibility()
@@ -69,12 +80,12 @@ namespace zecil.AmbiHueTv
 
             video_init.IsEnabled = false;
             register.IsEnabled = false;
-            cleanup.IsEnabled = true;
+            stop.IsEnabled = true;
+            calibrate.IsEnabled = true;
         }
 
 
         #endregion
-
 
         public MainPage()
         {
@@ -127,6 +138,41 @@ namespace zecil.AmbiHueTv
             Settings.TheBiasAlgorithm = (BiasAlgorithm)Bias.SelectedIndex;
         }
 
+        private void stop_Click(object sender, RoutedEventArgs e)
+        {
+            SetDisabledButtonVisibility();
+            Cleanup();
+        }
+
+        private void calibrate_Click(object sender, RoutedEventArgs e)
+        {
+            fps.Text = "Click Upper Left Corner of Calibration Box on Preview";
+            _calState = CalibrationState.CalibrationFirstPoint;
+        }
+
+        private void previewElement_Tapped(object sender, TappedRoutedEventArgs e)
+        {
+            if (_calState == CalibrationState.CalibrationFirstPoint)
+            {
+                var point = e.GetPosition(previewElement);
+                Settings.CalibrationLeft = point.X;
+                Settings.CalibreationTop = point.Y;
+                _calState = CalibrationState.CalibrationSecondPoint;
+                fps.Text = "Click Lower Right Corner of Calibration Box on Preview";
+                return;
+            }
+
+            if (_calState == CalibrationState.CalibrationSecondPoint)
+            {
+                var point = e.GetPosition(previewElement);
+                Settings.CalibrationWidth = point.X - Settings.CalibrationLeft;
+                Settings.CalibrationHeight = point.Y - Settings.CalibreationTop;
+                _calState = CalibrationState.NotCalibrating;
+                ShowCalibrationBox();
+                UpdateStatus("Calibration Completed");
+            }
+        }
+
         private async Task Start()
         {
             _hue = new Hue();
@@ -172,7 +218,15 @@ namespace zecil.AmbiHueTv
 
             await startVideoTask;
             SetRunningButtonVisibility();
+            ShowCalibrationBox();
             await WatchFrames();
+        }
+
+        private void ShowCalibrationBox()
+        {
+            calibration.Margin = new Thickness(Settings.CalibrationLeft, Settings.CalibreationTop, 0, 0);
+            calibration.Width = Settings.CalibrationWidth;
+            calibration.Height = Settings.CalibrationHeight;
         }
 
         private async Task WatchFrames()
@@ -187,7 +241,13 @@ namespace zecil.AmbiHueTv
                 try
                 {
                     await _mediaCapture.GetPreviewFrameAsync(currentFrame);
-                    analysis.AnalyzeFrame(ref currentFrame, Settings.TheAnalysisAlgorithm, Settings.TheBiasAlgorithm);
+                    analysis.AnalyzeFrame(ref currentFrame, 
+                                          Settings.TheAnalysisAlgorithm, 
+                                          Settings.TheBiasAlgorithm, 
+                                          (int)Settings.CalibreationTop, 
+                                          (int)Settings.CalibrationLeft, 
+                                          (int)(Settings.CalibreationTop + Settings.CalibrationHeight), 
+                                          (int)(Settings.CalibrationLeft + Settings.CalibrationWidth));
                     count++;
 
                     if (await _hue.ChangeFilteredLightsColor(analysis.Red, analysis.Green, analysis.Blue))
@@ -195,7 +255,11 @@ namespace zecil.AmbiHueTv
                         frequent.Fill = new SolidColorBrush(Color.FromArgb(255, analysis.Red, analysis.Green, analysis.Blue));
                         changes++;
                     }
-                    fps.Text = $"Frames: {count} Changes: {changes} Values:{analysis.Red},{analysis.Green},{analysis.Blue},{analysis.Alpha}";
+                    if (_calState == CalibrationState.NotCalibrating)
+                    {
+                        fps.Text =
+                            $"Frames: {count} Changes: {changes} Values:{analysis.Red},{analysis.Green},{analysis.Blue},{analysis.Alpha}";
+                    }
                 }
                 catch (Exception ex)
                 {
@@ -262,11 +326,6 @@ namespace zecil.AmbiHueTv
             }
         }
 
-        private void cleanup_Click(object sender, RoutedEventArgs e)
-        {
-            SetDisabledButtonVisibility();
-            Cleanup();
-        }
 
         /// <summary>
         /// Callback function for any failures in MediaCapture operations
@@ -293,6 +352,5 @@ namespace zecil.AmbiHueTv
                 }
             });
         }
-
     }
 }
