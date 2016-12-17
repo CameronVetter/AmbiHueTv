@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Runtime.InteropServices.WindowsRuntime;
 using Windows.Media;
+using Windows.Graphics.Imaging;
 using Windows.UI.Xaml.Media.Imaging;
 using static System.Int16;
 
@@ -34,9 +35,9 @@ namespace zecil.AmbiHueTv
         {
             Bias = bias;
 
-            WriteableBitmap bitmap = new WriteableBitmap(frame.SoftwareBitmap.PixelWidth,
-                frame.SoftwareBitmap.PixelHeight);
-            frame.SoftwareBitmap.CopyToBuffer(bitmap.PixelBuffer);
+            WriteableBitmap bitmap = new WriteableBitmap(frame.SoftwareBitmap.PixelWidth, frame.SoftwareBitmap.PixelHeight);
+            var converted = SoftwareBitmap.Convert(frame.SoftwareBitmap, BitmapPixelFormat.Bgra8);
+            converted.CopyToBuffer(bitmap.PixelBuffer);
 
             switch (algorithm)
             {

@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Diagnostics;
 using System.Threading.Tasks;
 using Windows.Graphics.Imaging;
 using Windows.Media;
@@ -10,6 +11,7 @@ using Windows.UI.Xaml.Controls;
 using Windows.UI.Xaml.Input;
 using Windows.UI.Xaml.Media;
 using Nito.AsyncEx;
+using System.Linq;
 
 namespace zecil.AmbiHueTv
 {
@@ -233,7 +235,8 @@ namespace zecil.AmbiHueTv
         {
             long count = 0;
             long changes = 0;
-            VideoFrame currentFrame = new VideoFrame(BitmapPixelFormat.Rgba8, 320, 180);
+            // TODO You may need to customize the line below for your camera.  If you do run in debug mode and all valid values for your camera will be output.
+            VideoFrame currentFrame = new VideoFrame(BitmapPixelFormat.Nv12, 352, 288);
             FrameAnalysis analysis = new FrameAnalysis();
 
             while (_isSyncing)
@@ -304,7 +307,7 @@ namespace zecil.AmbiHueTv
 
                 var settings = new MediaCaptureInitializationSettings()
                 {
-                    StreamingCaptureMode = StreamingCaptureMode.Video,
+                    StreamingCaptureMode = StreamingCaptureMode.Video
                 };
 
                 await _mediaCapture.InitializeAsync(settings);
@@ -319,6 +322,20 @@ namespace zecil.AmbiHueTv
                 await _mediaCapture.StartPreviewAsync();
                 _isSyncing = true;
                 UpdateStatus("Camera preview succeeded");
+
+#if DEBUG
+                var allStreamProperties = _mediaCapture.VideoDeviceController.GetAvailableMediaStreamProperties(MediaStreamType.VideoPreview).Select(x => new StreamPropertiesHelper(x));
+                allStreamProperties = allStreamProperties.OrderByDescending(x => x.Height * x.Width).ThenByDescending(x => x.FrameRate);
+
+                UpdateStatus("**** Available Camera Modes ****");
+                foreach (var mode in allStreamProperties)
+                {
+                    var output = $"{mode.EncodingProperties.Type},{mode.EncodingProperties.Subtype} ~ {mode.Width}x{mode.Height}@{mode.FrameRate}hz";
+                    UpdateStatus(output);
+                    Debug.WriteLine(output);
+                }
+                UpdateStatus("**** Available Camera Modes ****");
+#endif
             }
             catch (Exception ex)
             {
