@@ -100,15 +100,15 @@ namespace zecil.AmbiHueTv
 
             using (var stream = bitmap.PixelBuffer.AsStream())
             {
-                int red = 0;
+                int blue = 0;
 
-                while (red != -1)
+                while (blue != -1)
                 {
-                    red = stream.ReadByte();
-                    if (red > -1)
+                    blue = stream.ReadByte();
+                    if (blue > -1)
                     {
                         var green = stream.ReadByte();
-                        var blue = stream.ReadByte();
+                        var red = stream.ReadByte();
                         var alpha = stream.ReadByte();
 
                         if (IsInCalibrationFrame(x, y, calTop, calLeft, calBottom, calRight))
@@ -158,15 +158,15 @@ namespace zecil.AmbiHueTv
 
             using (var stream = bitmap.PixelBuffer.AsStream())
             {
-                int red = 0;
+                int blue = 0;
 
-                while (red != -1)
+                while (blue != -1)
                 {
-                    red = stream.ReadByte();
-                    if (red > -1)
+                    blue = stream.ReadByte();
+                    if (blue > -1)
                     {
                         var green = stream.ReadByte();
-                        var blue = stream.ReadByte();
+                        var red = stream.ReadByte();
                         var alpha = stream.ReadByte();
 
                         if (IsInCalibrationFrame(x, y, calTop, calLeft, calBottom, calRight))
@@ -212,15 +212,15 @@ namespace zecil.AmbiHueTv
 
             using (var stream = bitmap.PixelBuffer.AsStream())
             {
-                int red = 0;
+                int blue = 0;
 
-                while (red != -1)
+                while (blue != -1)
                 {
-                    red = stream.ReadByte();
-                    if (red > -1)
+                    blue = stream.ReadByte();
+                    if (blue > -1)
                     {
                         var green = stream.ReadByte();
-                        var blue = stream.ReadByte();
+                        var red = stream.ReadByte();
                         var alpha = stream.ReadByte();
 
                         if (IsInCalibrationFrame(x, y, calTop, calLeft, calBottom, calRight))
