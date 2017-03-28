@@ -31,7 +31,6 @@ namespace zecil.AmbiHueTv
         private MediaCapture _mediaCapture;
         private bool _isSyncing;
         private CalibrationState _calState = CalibrationState.NotCalibrating;
-
         public INotifyTaskCompletion Initialization { get; private set; }
 
         #region UI Helper Functions
@@ -97,7 +96,6 @@ namespace zecil.AmbiHueTv
 
             SetStartupButtonVisibility();
 
-
             algorithm.SelectedIndex = (int)Settings.TheAnalysisAlgorithm;
             Bias.SelectedIndex = (int)Settings.TheBiasAlgorithm;
 
@@ -160,7 +158,7 @@ namespace zecil.AmbiHueTv
             {
                 var point = e.GetPosition(previewElement);
                 Settings.CalibrationLeft = point.X;
-                Settings.CalibreationTop = point.Y;
+                Settings.CalibrationTop = point.Y;
                 _calState = CalibrationState.CalibrationSecondPoint;
                 fps.Text = "Click Lower Right Corner of Calibration Box on Preview";
                 return;
@@ -170,7 +168,7 @@ namespace zecil.AmbiHueTv
             {
                 var point = e.GetPosition(previewElement);
                 Settings.CalibrationWidth = point.X - Settings.CalibrationLeft;
-                Settings.CalibrationHeight = point.Y - Settings.CalibreationTop;
+                Settings.CalibrationHeight = point.Y - Settings.CalibrationTop;
                 _calState = CalibrationState.NotCalibrating;
                 ShowCalibrationBox();
                 UpdateStatus("Calibration Completed");
@@ -228,7 +226,7 @@ namespace zecil.AmbiHueTv
 
         private void ShowCalibrationBox()
         {
-            calibration.Margin = new Thickness(Settings.CalibrationLeft, Settings.CalibreationTop, 0, 0);
+            calibration.Margin = new Thickness(Settings.CalibrationLeft, Settings.CalibrationTop, 0, 0);
             calibration.Width = Settings.CalibrationWidth;
             calibration.Height = Settings.CalibrationHeight;
         }
@@ -246,12 +244,13 @@ namespace zecil.AmbiHueTv
                 try
                 {
                     await _mediaCapture.GetPreviewFrameAsync(currentFrame);
+
                     analysis.AnalyzeFrame(ref currentFrame, 
                                           Settings.TheAnalysisAlgorithm, 
                                           Settings.TheBiasAlgorithm, 
-                                          (int)Settings.CalibreationTop, 
+                                          (int)Settings.CalibrationTop, 
                                           (int)Settings.CalibrationLeft, 
-                                          (int)(Settings.CalibreationTop + Settings.CalibrationHeight), 
+                                          (int)(Settings.CalibrationTop + Settings.CalibrationHeight), 
                                           (int)(Settings.CalibrationLeft + Settings.CalibrationWidth));
                     count++;
 #if DEBUG

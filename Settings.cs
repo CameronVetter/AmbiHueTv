@@ -24,8 +24,8 @@ namespace zecil.AmbiHueTv
         private const string CalibrationLeftKey = "left_key";
         private static readonly double CalibrationLeftDefault = 0;
 
-        private const string CalibreationTopKey = "top_key";
-        private static readonly double CalibreationTopDefault = 0;
+        private const string CalibrationTopKey = "top_key";
+        private static readonly double CalibrationTopDefault = 0;
 
         private const string CalibrationWidthKey = "width_key";
         private static readonly double CalibrationWidthDefault = 320;
@@ -67,10 +67,10 @@ namespace zecil.AmbiHueTv
             set { AppSettings.AddOrUpdateValue(CalibrationLeftKey, value); }
         }
 
-        public static double CalibreationTop
+        public static double CalibrationTop
         {
-            get { return AppSettings.GetValueOrDefault(CalibreationTopKey, CalibreationTopDefault); }
-            set { AppSettings.AddOrUpdateValue(CalibreationTopKey, value); }
+            get { return AppSettings.GetValueOrDefault(CalibrationTopKey, CalibrationTopDefault); }
+            set { AppSettings.AddOrUpdateValue(CalibrationTopKey, value); }
         }
 
         public static double CalibrationWidth
