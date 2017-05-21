@@ -4,11 +4,13 @@ using System.Threading.Tasks;
 using Windows.Graphics.Imaging;
 using Windows.Media;
 using Windows.Media.Capture;
+using Windows.Media.MediaProperties;
 using Windows.UI;
 using Windows.UI.Core;
 using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
 using Windows.UI.Xaml.Input;
+using Windows.UI.Xaml.Media.Imaging;
 using Windows.UI.Xaml.Media;
 using Nito.AsyncEx;
 using System.Linq;
@@ -29,7 +31,6 @@ namespace zecil.AmbiHueTv
         private MediaCapture _mediaCapture;
         private bool _isSyncing;
         private CalibrationState _calState = CalibrationState.NotCalibrating;
-
         public INotifyTaskCompletion Initialization { get; private set; }
 
         #region UI Helper Functions
@@ -95,7 +96,6 @@ namespace zecil.AmbiHueTv
 
             SetStartupButtonVisibility();
 
-
             algorithm.SelectedIndex = (int)Settings.TheAnalysisAlgorithm;
             Bias.SelectedIndex = (int)Settings.TheBiasAlgorithm;
 
@@ -158,7 +158,7 @@ namespace zecil.AmbiHueTv
             {
                 var point = e.GetPosition(previewElement);
                 Settings.CalibrationLeft = point.X;
-                Settings.CalibreationTop = point.Y;
+                Settings.CalibrationTop = point.Y;
                 _calState = CalibrationState.CalibrationSecondPoint;
                 fps.Text = "Click Lower Right Corner of Calibration Box on Preview";
                 return;
@@ -168,7 +168,7 @@ namespace zecil.AmbiHueTv
             {
                 var point = e.GetPosition(previewElement);
                 Settings.CalibrationWidth = point.X - Settings.CalibrationLeft;
-                Settings.CalibrationHeight = point.Y - Settings.CalibreationTop;
+                Settings.CalibrationHeight = point.Y - Settings.CalibrationTop;
                 _calState = CalibrationState.NotCalibrating;
                 ShowCalibrationBox();
                 UpdateStatus("Calibration Completed");
@@ -226,7 +226,7 @@ namespace zecil.AmbiHueTv
 
         private void ShowCalibrationBox()
         {
-            calibration.Margin = new Thickness(Settings.CalibrationLeft, Settings.CalibreationTop, 0, 0);
+            calibration.Margin = new Thickness(Settings.CalibrationLeft, Settings.CalibrationTop, 0, 0);
             calibration.Width = Settings.CalibrationWidth;
             calibration.Height = Settings.CalibrationHeight;
         }
@@ -244,20 +244,21 @@ namespace zecil.AmbiHueTv
                 try
                 {
                     await _mediaCapture.GetPreviewFrameAsync(currentFrame);
+
                     analysis.AnalyzeFrame(ref currentFrame, 
                                           Settings.TheAnalysisAlgorithm, 
                                           Settings.TheBiasAlgorithm, 
-                                          (int)Settings.CalibreationTop, 
+                                          (int)Settings.CalibrationTop, 
                                           (int)Settings.CalibrationLeft, 
-                                          (int)(Settings.CalibreationTop + Settings.CalibrationHeight), 
+                                          (int)(Settings.CalibrationTop + Settings.CalibrationHeight), 
                                           (int)(Settings.CalibrationLeft + Settings.CalibrationWidth));
                     count++;
+#if DEBUG
+                    Debug.WriteLine("Frame " + count.ToString() + ": " + DateTime.Now.ToString("hh:mm:ss.fff"));
+#endif
 
-                    if (await _hue.ChangeFilteredLightsColor(analysis.Red, analysis.Green, analysis.Blue))
-                    {
-                        frequent.Fill = new SolidColorBrush(Color.FromArgb(255, analysis.Red, analysis.Green, analysis.Blue));
-                        changes++;
-                    }
+                    _hue.UpdateColor(analysis.Red, analysis.Green, analysis.Blue);
+                    
                     if (_calState == CalibrationState.NotCalibrating)
                     {
                         fps.Text =
@@ -267,6 +268,9 @@ namespace zecil.AmbiHueTv
                 catch (Exception ex)
                 {
                     UpdateStatus(ex.Message);
+#if DEBUG
+                    Debug.Write(ex.StackTrace); 
+#endif
                 }
             }
 
@@ -312,6 +316,7 @@ namespace zecil.AmbiHueTv
 
                 await _mediaCapture.InitializeAsync(settings);
 
+                VideoEncodingProperties captureProperties = new VideoEncodingProperties();
 
                 // Set callbacks for failure and recording limit exceeded
                 UpdateStatus("Device successfully initialized for video recording!");
@@ -323,19 +328,24 @@ namespace zecil.AmbiHueTv
                 _isSyncing = true;
                 UpdateStatus("Camera preview succeeded");
 
-#if DEBUG
                 var allStreamProperties = _mediaCapture.VideoDeviceController.GetAvailableMediaStreamProperties(MediaStreamType.VideoPreview).Select(x => new StreamPropertiesHelper(x));
                 allStreamProperties = allStreamProperties.OrderByDescending(x => x.Height * x.Width).ThenByDescending(x => x.FrameRate);
 
-                UpdateStatus("**** Available Camera Modes ****");
+#if DEBUG
+                UpdateStatus("**** Available Camera Modes ****"); 
+#endif
                 foreach (var mode in allStreamProperties)
                 {
+#if DEBUG
                     var output = $"{mode.EncodingProperties.Type},{mode.EncodingProperties.Subtype} ~ {mode.Width}x{mode.Height}@{mode.FrameRate}hz";
                     UpdateStatus(output);
-                    Debug.WriteLine(output);
-                }
-                UpdateStatus("**** Available Camera Modes ****");
+                    Debug.WriteLine(output); 
 #endif
+                    if((mode.EncodingProperties.Type == "Video") && (mode.EncodingProperties.Subtype=="NV12") && (mode.Width==352) && (mode.Height==288) && (mode.FrameRate==5))
+                    {
+                        await _mediaCapture.VideoDeviceController.SetMediaStreamPropertiesAsync(MediaStreamType.VideoPreview, mode.EncodingProperties);
+                    }
+                }
             }
             catch (Exception ex)
             {
